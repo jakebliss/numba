@@ -395,7 +395,9 @@ class Array(Buffer):
     """
 
     def __init__(self, dtype, ndim, layout, readonly=False, name=None,
-                 aligned=True):
+                 aligned=True, strides=None):
+        # import pdb; pdb.set_trace()
+        self.strides = strides
         if readonly:
             self.mutable = False
         if (not aligned or
@@ -407,7 +409,7 @@ class Array(Buffer):
                 type_name = "readonly " + type_name
             if not self.aligned:
                 type_name = "unaligned " + type_name
-            name = "%s(%s, %sd, %s)" % (type_name, dtype, ndim, layout)
+            name = "%s(%s, %sd, %s, %s)" % (type_name, dtype, ndim, layout, strides)
         super(Array, self).__init__(dtype, ndim, layout, name=name)
 
     @property
@@ -431,7 +433,7 @@ class Array(Buffer):
 
     @property
     def key(self):
-        return self.dtype, self.ndim, self.layout, self.mutable, self.aligned
+        return self.dtype, self.ndim, self.layout, self.mutable, self.aligned, self.strides
 
     def unify(self, typingctx, other):
         """

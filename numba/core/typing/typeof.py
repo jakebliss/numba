@@ -213,13 +213,14 @@ def _typeof_dtype(val, c):
 
 @typeof_impl.register(np.ndarray)
 def _typeof_ndarray(val, c):
+    # import pdb; pdb.set_trace()
     try:
         dtype = numpy_support.from_dtype(val.dtype)
     except NotImplementedError:
         raise ValueError("Unsupported array dtype: %s" % (val.dtype,))
     layout = numpy_support.map_layout(val)
     readonly = not val.flags.writeable
-    return types.Array(dtype, val.ndim, layout, readonly=readonly)
+    return types.Array(dtype, val.ndim, layout, readonly=readonly, strides=val.strides)
 
 
 @typeof_impl.register(types.NumberClass)
