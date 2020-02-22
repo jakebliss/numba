@@ -1,15 +1,30 @@
+'''
+import numba.cuda
+import numpy as np
+
+@numba.cuda.jit()
+def test(x, y):
+    for i in range(x.shape[0]):
+        y[i] = x[i]
+
+
+x = np.ones(1000000, dtype=np.float32)
+#x = np.broadcast_to(np.ones(1, dtype=np.float32), 1000000)
+y = np.ones(len(x), dtype=np.float32)
+test(x, y)
+'''
+
+
 import numba
 import numpy as np
 
-@numba.jit(nopython=True)
-def test(x):
-    g = 0
+@numba.jit()
+def test(x, y):
     for i in range(x.shape[0]):
-        g += x[i] * x[i]
-    return g
+        y[i] = x[i] * x[i]
 
 
-a = np.broadcast_to(1, 1000000)
-b = np.ones(1000000)
-test(a)
-test(b)
+x = np.ones(1000000, dtype=np.float32)
+x = np.broadcast_to(np.ones(1, dtype=np.float32), 1000000)
+y = np.ones(len(x), dtype=np.float32)
+test(x, y)
