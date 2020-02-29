@@ -228,6 +228,24 @@ class BaseLower(object):
 
         # Init argument values
         self.extract_function_arguments()
+
+        import llvmlite.ir
+
+        func = self.module.functions[0]
+        block = func.blocks[0]
+        for inst in block.instructions:
+            if 'strides' in inst.name:
+                name_parts = inst.value.value.name.split('.')
+                if len(name_parts) >= 2 and name_parts[0] == 'arg':
+                    arg_name = name_parts[1]
+                    arg_ind = fndesc.args.index(arg_name)
+                    strides = fndesc.argtypes[arg_ind].strides
+
+                    constant_strides = Constant.int(llvmlite.ir.IntType(64), strides[0])
+
+                    print('rewriting constant strides ({},) for arg {}'.format(strides[0], arg_name))
+                    inst.value.value = constant_strides
+
         entry_block_tail = self.lower_function_body()
 
         # Close tail of entry block
