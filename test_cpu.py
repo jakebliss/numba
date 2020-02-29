@@ -1,3 +1,5 @@
+import os
+
 import numba
 import numpy as np
 import time
@@ -19,7 +21,8 @@ def time_function(f, *args):
     end.record()
     end.synchronize()
     _e = time.time()
-    timing_nb += cuda.event_elapsed_time(start, end)
+    if not os.environ.get('NUMBA_ENABLE_CUDASIM'):
+        timing_nb += cuda.event_elapsed_time(start, end)
     timing_nb_wall += _e - _s
 
     print("numba events:", timing_nb / 3, "ms")
