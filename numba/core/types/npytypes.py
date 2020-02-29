@@ -396,7 +396,6 @@ class Array(Buffer):
 
     def __init__(self, dtype, ndim, layout, readonly=False, name=None,
                  aligned=True, strides=None):
-        # import pdb; pdb.set_trace()
         self.strides = strides
         if readonly:
             self.mutable = False
