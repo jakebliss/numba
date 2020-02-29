@@ -229,12 +229,17 @@ class BaseLower(object):
         # Init argument values
         self.extract_function_arguments()
 
+        import os
         import llvmlite.ir
-        def rewrite_strides(insert_value, strides):
-            stride_ind = insert_value.indices[0]
-            stride = strides[stride_ind]
-            insert_value.value = Constant.int(llvmlite.ir.IntType(64), stride)
-            print('rewriting {}.strides[{}] as {}'.format(arg_name, stride_ind, stride))
+        if os.environ.get('NUMBA_HARDCODE_STRIDES'):
+            def rewrite_strides(insert_value, strides):
+                stride_ind = insert_value.indices[0]
+                stride = strides[stride_ind]
+                insert_value.value = Constant.int(llvmlite.ir.IntType(64), stride)
+                print('rewriting {}.strides[{}] as {}'.format(arg_name, stride_ind, stride))
+        else:
+            def rewrite_strides(*args):
+                ...
 
         for block in self.function.blocks:
             for inst in block.instructions:
