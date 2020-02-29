@@ -62,8 +62,8 @@ array = np.ones((10, 10, 10), dtype=np.float32)
 result = np.zeros_like(array)
 kernel = np.ones((3, 3, 3))
 
-x = np.ones(1000, dtype=np.float32)
-y = np.zeros(1000, dtype=np.float32)
+x = np.ones(100000, dtype=np.float32)
+y = np.zeros(100000, dtype=np.float32)
 
 time_function(conv3D, array, kernel, result)
 time_function(mean, array, np.ones(1))
