@@ -230,21 +230,28 @@ class BaseLower(object):
         self.extract_function_arguments()
 
         import llvmlite.ir
+        def rewrite_strides(insert_value, strides):
+            stride_ind = insert_value.indices[0]
+            stride = strides[stride_ind]
+            insert_value.value = Constant.int(llvmlite.ir.IntType(64), stride)
+            print('rewriting {}.strides[{}] as {}'.format(arg_name, stride_ind, stride))
 
-        func = self.module.functions[0]
-        block = func.blocks[0]
-        for inst in block.instructions:
-            if 'strides' in inst.name:
-                name_parts = inst.value.value.name.split('.')
-                if len(name_parts) >= 2 and name_parts[0] == 'arg':
-                    arg_name = name_parts[1]
-                    arg_ind = fndesc.args.index(arg_name)
-                    strides = fndesc.argtypes[arg_ind].strides
+        for block in self.function.blocks:
+            for inst in block.instructions:
+                if 'strides' in inst.name:
+                    name_parts = inst.value.value.name.split('.')
+                    if len(name_parts) >= 2 and name_parts[0] == 'arg':
+                        arg_name = name_parts[1]
+                        arg_ind = fndesc.args.index(arg_name)
+                        strides = fndesc.argtypes[arg_ind].strides
 
-                    constant_strides = Constant.int(llvmlite.ir.IntType(64), strides[0])
+                        insert_value = inst.value
+                        rewrite_strides(insert_value, strides)
 
-                    print('rewriting constant strides ({},) for arg {}'.format(strides[0], arg_name))
-                    inst.value.value = constant_strides
+                        while type(insert_value.operands[0]) == llvmlite.ir.instructions.InsertValue:
+                            insert_value = insert_value.operands[0]
+                            rewrite_strides(insert_value, strides)
+
 
         entry_block_tail = self.lower_function_body()
 
