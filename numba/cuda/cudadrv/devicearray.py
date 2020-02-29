@@ -189,7 +189,7 @@ class DeviceNDArrayBase(object):
             layout = 'A'
 
         dtype = numpy_support.from_dtype(self.dtype)
-        return types.Array(dtype, self.ndim, layout)
+        return types.Array(dtype, self.ndim, layout, strides=self.strides)
 
     @property
     def device_ctypes_pointer(self):
