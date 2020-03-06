@@ -1,6 +1,5 @@
 import os
 
-import numba
 import numpy as np
 import time
 from numba import cuda
@@ -41,7 +40,8 @@ def mean(arr, result):
     for i in range(arr.shape[0]):
         for j in range(arr.shape[1]):
             for k in range(arr.shape[2]):
-                result[0] += arr[i, j, k] / (arr.shape[0] * arr.shape[1] * arr.shape[2])
+                result[0] += arr[i, j, k] / (arr.shape[0]
+                                             * arr.shape[1] * arr.shape[2])
 
 
 @cuda.jit
@@ -58,13 +58,34 @@ def conv3D(array, kernel, result):
                 result[i, j, k] = dot
 
 
-array = np.ones((10, 10, 10), dtype=np.float32)
-result = np.zeros_like(array)
-kernel = np.ones((3, 3, 3))
+def run_tests(optimizations_on="0"):
+    os.environ['NUMBA_HARDCODE_STRIDES'] = optimizations_on
+    array = np.ones((10, 10, 10), dtype=np.float32)
+    non_contig_array = array.transpose(0,2,1)
+    result = np.zeros_like(array)
+    kernel = np.ones((3, 3, 3))
 
-x = np.ones(100000, dtype=np.float32)
-y = np.zeros(100000, dtype=np.float32)
+    x = np.ones(100000, dtype=np.float32)
+    y = np.zeros(100000, dtype=np.float32)
 
-time_function(conv3D, array, kernel, result)
-time_function(mean, array, np.ones(1))
-time_function(copy_vector, x, y)
+    print("*****CONTIGUOUS ARRAY TESTS*****")
+    time_function(conv3D, array, kernel, result)
+    time_function(mean, array, np.ones(1))
+    time_function(copy_vector, x, y)
+
+    array.strides = (0,) * array.ndim
+
+    print("*****CONTIGUOUS ARRAY TESTS (STRIDES = 0)*****")
+    time_function(conv3D, array, kernel, result)
+    time_function(mean, array, np.ones(1))
+    time_function(copy_vector, x, y)
+
+    print("*****NON-CONTIGUOUS ARRAY TESTS*****")
+    time_function(conv3D, non_contig_array, kernel, result)
+    time_function(mean, non_contig_array, np.ones(1))
+
+
+print("*****OPTIMIZATIONS OFF*****")
+run_tests("0")
+print("\n*****OPTIMIZATIONS ON*****")
+run_tests("1")
