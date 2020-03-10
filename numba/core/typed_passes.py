@@ -657,18 +657,3 @@ class DeadCodeElimination(FunctionPass):
     def run_pass(self, state):
         dead_code_elimination(state.func_ir, state.typemap)
         return True
-
-@register_pass(mutates_CFG=False, analysis_only=False)
-class HardCodeStrides(FunctionPass):
-    """
-    This pass will take in stride information for an array and hard code it into the IR
-    so that it does not need to be recomputed.
-    """
-
-    _name = "hard_code_strides"
-
-    def __init__(self):
-        FunctionPass.__init__(self)
-
-    def run_pass(self, state):
-        return False

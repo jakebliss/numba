@@ -231,31 +231,28 @@ class BaseLower(object):
 
         import os
         import llvmlite.ir
+        import time
         if os.environ.get('NUMBA_HARDCODE_STRIDES'):
             def rewrite_strides(insert_value, strides):
                 stride_ind = insert_value.indices[0]
                 stride = strides[stride_ind]
                 insert_value.value = Constant.int(llvmlite.ir.IntType(64), stride)
-                print('rewriting {}.strides[{}] as {}'.format(arg_name, stride_ind, stride))
-        else:
-            def rewrite_strides(*args):
-                ...
 
-        for block in self.function.blocks:
+            block = self.function.blocks[0]
             for inst in block.instructions:
-                if 'strides' in inst.name:
-                    name_parts = inst.value.value.name.split('.')
-                    if len(name_parts) >= 2 and name_parts[0] == 'arg':
-                        arg_name = name_parts[1]
-                        arg_ind = fndesc.args.index(arg_name)
-                        strides = fndesc.argtypes[arg_ind].strides
-
-                        insert_value = inst.value
-                        rewrite_strides(insert_value, strides)
-
-                        while type(insert_value.operands[0]) == llvmlite.ir.instructions.InsertValue:
-                            insert_value = insert_value.operands[0]
-                            rewrite_strides(insert_value, strides)
+                if 'strides' not in inst.name:
+                    continue
+                name_parts = inst.value.value.name.split('.')
+                if not (len(name_parts) >= 2 and name_parts[0] == 'arg'):
+                    continue
+                arg_name = name_parts[1]
+                arg_ind = fndesc.args.index(arg_name)
+                strides = fndesc.argtypes[arg_ind].strides
+                insert_value = inst.value
+                rewrite_strides(insert_value, strides)
+                while type(insert_value.operands[0]) == llvmlite.ir.instructions.InsertValue:
+                    insert_value = insert_value.operands[0]
+                    rewrite_strides(insert_value, strides)
 
 
         entry_block_tail = self.lower_function_body()

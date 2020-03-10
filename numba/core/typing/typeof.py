@@ -213,7 +213,6 @@ def _typeof_dtype(val, c):
 
 @typeof_impl.register(np.ndarray)
 def _typeof_ndarray(val, c):
-    # import pdb; pdb.set_trace()
     try:
         dtype = numpy_support.from_dtype(val.dtype)
     except NotImplementedError:
